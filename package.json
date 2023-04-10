@@ -1,0 +1,34 @@
+{
+  "name": "sequelize",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx nodemon app/index.js",
+    "make-model": "npx sequelize-cli model:generate --name User --attributes firstName:string,lastName:string,email:string",
+    "down": "npx sequelize-cli db:migrate:undo",
+    "migrate": "npx sequelize-cli db:migrate",
+    "make-migration": "npx sequelize-cli migration:create --name modify_users_add_new_fields.",
+    "revert-all-migration": "npx sequelize-cli db:migrate:undo:all",
+    "revert-one-migration": "npx sequelize-cli db:migrate:undo --name 20221213045630-create-admin.js ",
+    "swagger": "npx nodemon app/swagger/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-validator": "^6.15.0",
+    "nodemon": "^2.0.22",
+    "path": "^0.12.7",
+    "pg": "^8.10.0",
+    "pg-hstore": "^2.3.4",
+    "request": "^2.88.2",
+    "sequelize": "^6.30.0",
+    "sequelize-cli": "^6.6.0",
+    "uuid": "^9.0.0",
+    "uuidv4": "^6.2.13"
+  }
+}
