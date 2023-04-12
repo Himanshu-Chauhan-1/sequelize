@@ -5,16 +5,7 @@ const schoolController = require(path.resolve('./modules/schools/schools.control
 const rule = require(path.resolve('./modules/schools/schools.validator'));
 
 
-schoolRouter.post("/api/schools", rule.verifyRules, schoolController.index)
-
+schoolRouter.get("/api/schools", [rule.getAllSchools], schoolController.index)
 
 module.exports = schoolRouter
 
-
-
-// module.exports = function (router) {
-
-//     //CREATE SPACE
-//     router.post("api/spaces", rule.createSpaceRules, rule.verifyRules, spaceController.create)
-
-// }

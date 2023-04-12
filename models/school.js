@@ -70,9 +70,26 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   School.getList = async function (data) {
-    const queryOptions = {
-      limit: data.query.limit || null,
-      order: [['name', 'ASC']],
+   
+
+    let page = Number(req.body.page) || 1;
+    let limit = Number(req.query.limit) || 3;
+    let skip = (page - 1) * limit
+
+    if (data) {
+      if (data.query.like) {
+        whereOptions['name'] = {
+          [Op.iLike]: `${data.query.like}%`,
+        }
+      }
+
+      if (data.query.name) {
+        whereOptions['name'] = data.query.name
+      }
+
+      if (data.query.limit) {
+        queryOptions['limit'] = data.query.limit > 10 ? 10 : data.query.limit
+      }
     }
   }
 
