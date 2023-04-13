@@ -13,6 +13,12 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      // RELATION WITH `users`
+      this.belongsToMany(models.User, {
+        as: 'users',
+        through: 'user_schools',
+        foreignKey: 'school_id',
+      })
     }
   }
   School.init({
@@ -70,7 +76,7 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   School.getList = async function (data) {
-   
+
 
     let page = Number(req.body.page) || 1;
     let limit = Number(req.query.limit) || 3;
