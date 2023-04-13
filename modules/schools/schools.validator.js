@@ -1,42 +1,54 @@
 const path = require('path');
-const db = require(path.resolve('./models/index'));
-const School = db.School;
-const { isValid, isValidNumber } = require(path.resolve('./utilities/validator'))
+const { param, query, body, validationResult } = require('express-validator');
 
-//=====================================================Get-All-Schools=========================================================//
+const getAllSchools = [
+    query('name').optional()
+        .notEmpty().withMessage('display_name cannot be empty')
+        .isString().withMessage('display_name must be a string')
+        .trim(),
+    query('quintile').optional()
+        .notEmpty().withMessage('quintile cannot be empty')
+        .trim(),
+    query('page').optional()
+        .isNumeric().withMessage('page must be a number')
+        .trim(),
+    query('limit').optional()
+        .isNumeric().withMessage('name must be a number')
+        .trim(),
+]
 
-const getAllSchools = async function (req, res, next) {
-    try {
+const getAllSchoolsByUser = [
+    query('display_name').optional()
+        .notEmpty().withMessage('display_name cannot be empty')
+        .isString().withMessage('display_name must be a string')
+        .trim(),
+    query('email').optional()
+        .notEmpty().withMessage('email cannot be empty')
+        .trim(),
+    query('name').optional()
+        .notEmpty().withMessage('name cannot be empty')
+        .isString().withMessage('name must be a string')
+        .trim(),
+]
 
-        let data = req.query
-
-        const { name, quintile, page, limit } = data
-
-        if ("name" in data) {
-            if (!isValid(name)) return res.status(422).send({ status: "error", message: "name is required" })
-        }
-
-        if ("quintile" in data) {
-            if (!isValid(quintile)) return res.status(422).send({ status: "error", message: "quintile is required" })
-        }
-
-        if ("page" in data) {
-            if (!isValid(page)) return res.status(422).send({ status: "error", message: "page no. is required" })
-            if (!isValidNumber(page)) return res.status(422).send({ status: "error", message: "Page no. can only be a Number" })
-        }
-
-        if ("limit" in data) {
-            if (!isValid(limit)) return res.status(422).send({ status: "error", message: "limit is required" })
-            if (!isValidNumber(limit)) return res.status(422).send({ status: "error", message: "limit can only be a Number" })
-        }
-
-        next()
-    } catch (error) {
-        console.log(error.message);
-        return res.status(422).send({ status: "error", msg: "Something went wrong Please check back again" })
+const verifyRules = function (req, res, next) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const error = errors.array().shift();
+        const payload = {
+            statusCode: 422,
+            message: error.msg,
+            param: error.param,
+            value: error.value,
+        };
+        return res.status(422).jsonp(payload);
+    } else {
+        next();
     }
-}
+};
 
 module.exports = {
-    getAllSchools
+    verifyRules,
+    getAllSchools,
+    getAllSchoolsByUser
 }
