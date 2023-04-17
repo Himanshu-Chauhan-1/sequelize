@@ -12,7 +12,6 @@ const getAllUsersByProvince = async function (req, res) {
         const { province, userClass } = data
         const whereOptions = {}
         whereOptions["province"] = province
-        // whereOptions["userClass"] = userClass
 
         let page = Number(req.query.page) || 1;
         let limit = Number(req.query.limit) ? Number(req.query.limit) : 10;
@@ -21,21 +20,6 @@ const getAllUsersByProvince = async function (req, res) {
 
         let userAttributes = ['id', 'first_name', 'last_name', 'display_name', 'email', 'phone', 'date_of_birth', 'nationality', 'province', 'city']
 
-
-        if (("userClass") in data) {
-
-            whereOptions['name'] = name
-
-            let findUsersByFilters = await User.findAll({
-                attributes: userAttributes,
-                include: { model: School, as: 'schools', where: whereOptions, required: true },
-                $sort: { id: 1 }, offset: offset, limit: limit,
-            })
-
-            if (!findUsersByFilters.length) return res.status(404).send({ status: "success", message: "No users found as per the filters applied" })
-
-            return res.status(200).send({ status: "success", message: "Users:", users_count: findUsersByFilters.length, data: findUsersByFilters })
-        }
 
         if (Object.keys(req.query).length > 0) {
 
