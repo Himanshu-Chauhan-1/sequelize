@@ -27,7 +27,7 @@ const getAllBlogs = async function (req, res) {
                         { description: { [Op.iLike]: `%${description}%` } },
                     ],
                 },
-                $sort: { id: 1 }, offset: offset, limit: limit
+                $sort: { title: 1 }, offset: offset, limit: limit
             })
 
             if (!findBlogsByFilter.length)
@@ -36,7 +36,7 @@ const getAllBlogs = async function (req, res) {
             return res.status(200).send({ status: "success", message: "Blogs as per the filters applied:", blogs_count: findBlogsByFilter.length, data: findBlogsByFilter })
         } else {
 
-            const blogData = await Blog.findAll({ attributes: blogAttributes })
+            const blogData = await Blog.findAll({ attributes: blogAttributes, $sort: { title: 1 } })
 
             if (blogData.length === 0) {
                 return res.status(422).send({ status: "success", message: "No Blogs Found....." });
