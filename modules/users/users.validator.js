@@ -12,6 +12,17 @@ const getAllUsersByProvince = [
         .trim(),
 ]
 
+const getAllUsersByUserClass = [
+    query('userClass').optional()
+        .notEmpty().withMessage('userClass cannot be empty'),
+    query('page').optional()
+        .isNumeric().withMessage('page must be a number')
+        .trim(),
+    query('limit').optional()
+        .isNumeric().withMessage('name must be a number')
+        .trim(),
+]
+
 const verifyRules = function (req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -31,4 +42,5 @@ const verifyRules = function (req, res, next) {
 module.exports = {
     verifyRules,
     getAllUsersByProvince,
+    getAllUsersByUserClass
 }
