@@ -5,6 +5,7 @@ const expressRouter = express.Router()
 const app = express()
 const spaceRouter = require('./modules/spaces/spaces.route');
 const schoolRouter = require('./modules/schools/schools.route');
+const userRouter = require('./modules/users/users.route');
 
 app.use(express.json())
 
@@ -32,7 +33,7 @@ const setupSequelize = function () {
 
 const port = PORT
 
-app.use('/', spaceRouter,schoolRouter)
+app.use('/', spaceRouter,schoolRouter,userRouter)
 
 app.listen(port, () => {
     console.log(`Server is listening at http://localhost:${port}`);

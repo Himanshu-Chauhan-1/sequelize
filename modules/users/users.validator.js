@@ -1,11 +1,9 @@
 const path = require('path');
 const { param, query, body, validationResult } = require('express-validator');
 
-const getAllSchools = [
-    query('name').optional()
-        .notEmpty().withMessage('display_name cannot be empty'),
-    query('quintile').optional()
-        .notEmpty().withMessage('quintile cannot be empty'),
+const getAllUsersByProvince = [
+    query('province').optional()
+        .notEmpty().withMessage('province cannot be empty'),
     query('page').optional()
         .isNumeric().withMessage('page must be a number')
         .trim(),
@@ -14,16 +12,14 @@ const getAllSchools = [
         .trim(),
 ]
 
-const getAllSchoolsByUser = [
-    query('display_name').optional()
-        .notEmpty().withMessage('display_name cannot be empty')
-        .isString().withMessage('display_name must be a string')
+const getAllUsersByUserClass = [
+    query('userClass').optional()
+        .notEmpty().withMessage('userClass cannot be empty'),
+    query('page').optional()
+        .isNumeric().withMessage('page must be a number')
         .trim(),
-    query('email').optional()
-        .notEmpty().withMessage('email cannot be empty')
-        .trim(),
-    query('name').optional()
-        .notEmpty().withMessage('name cannot be empty')
+    query('limit').optional()
+        .isNumeric().withMessage('name must be a number')
         .trim(),
 ]
 
@@ -37,7 +33,7 @@ const verifyRules = function (req, res, next) {
             param: error.param,
             value: error.value,
         };
-        return res.status(422).jsonp(payload);
+        return res.status(422).send(payload);
     } else {
         next();
     }
@@ -45,6 +41,6 @@ const verifyRules = function (req, res, next) {
 
 module.exports = {
     verifyRules,
-    getAllSchools,
-    getAllSchoolsByUser
+    getAllUsersByProvince,
+    getAllUsersByUserClass
 }

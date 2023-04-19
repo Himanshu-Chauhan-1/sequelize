@@ -75,6 +75,7 @@ const getAllSchoolsByUser = async function (req, res) {
 
         if (("name") in data) {
 
+            whereOptions['name'] = name
 
             let findUsersByFilters = await User.findAll({
                 attributes: userAttributes,
