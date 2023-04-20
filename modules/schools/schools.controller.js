@@ -2,7 +2,11 @@ const path = require('path');
 const db = require(path.resolve('./models/index'));
 const School = db.School;
 const User = db.User
+const Role = db.Role
+const UserRole = db.UserRole
+const UserSchool = db.UserSchool
 const { Op } = require("sequelize");
+const sequelize = require("sequelize");
 
 //========================================GET/GET-ALL-SCHOOLS===============================================================//
 
@@ -122,7 +126,112 @@ const getAllSchoolsByUser = async function (req, res) {
     }
 };
 
+//===========================================GET/GET-ALL-SCHOOLS-FOR-LEARNER=====================================================//
+
+const getAllSchoolsByLearner = async function (req, res) {
+    try {
+
+        let findLearnerRoleId = await Role.findOne({ where: { name: "Learner" } })
+        let learnerRoleId = findLearnerRoleId.id
+
+        let findTeacherRoleId = await Role.findOne({ where: { name: "Learner" } })
+        let teacherRoleId = findTeacherRoleId.id
+
+        let userAttributes = ['id', 'display_name', 'email']
+
+        let schoolAttributes = ['id', 'name', 'quintile']
+
+        const schoolsWithMaxLearners = await UserSchool.findAll({
+            attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'], [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'learnerCount']],
+            group: sequelize.col('UserSchool.school_id'),
+            raw: true,
+            include: [{
+                model: UserRole,
+                as: 'learner',
+                attributes: [],
+                where: {
+                    role_id: learnerRoleId
+                }
+            }],
+            subQuery: false,
+            limit: 5,
+            order: [['learnerCount', 'DESC']],
+        })
+
+        let firstMaximumschool = schoolsWithMaxLearners[0].school_id
+        let secondMaximumSchool = schoolsWithMaxLearners[1].school_id
+        let thirdMaximumSchool = schoolsWithMaxLearners[2].school_id
+        let fourthMaximumSchool = schoolsWithMaxLearners[3].school_id
+        let fifthMaximumSchool = schoolsWithMaxLearners[4].school_id
+
+        let arrayOfSchoolsIds = [firstMaximumschool, secondMaximumSchool, thirdMaximumSchool, fourthMaximumSchool, fifthMaximumSchool]
+
+        let findTeachersOfMaximumSchools = await School.findAll({
+            attributes: schoolAttributes,
+            where: {
+                id: { [Op.in]: arrayOfSchoolsIds }
+            },
+            include: [{
+                model: UserSchool,
+                as: "teachers",
+                attributes: ['user_id', 'school_id'],
+                include: {
+                    model: UserRole,
+                    as: "teacher",
+                    attributes: [],
+                    where: {
+                        role_id: teacherRoleId
+                    },
+                }
+            }],
+            subQuery: false
+        })
+
+        let firstTeacherId = findTeachersOfMaximumSchools[0].teachers[0].user_id
+        let secondTeacherId = findTeachersOfMaximumSchools[1].teachers[1].user_id
+        let thirdTeacherId = findTeachersOfMaximumSchools[2].teachers[2].user_id
+        let fourthTeacherId = findTeachersOfMaximumSchools[3].teachers[3].user_id
+        let fifthTeacherId = findTeachersOfMaximumSchools[4].teachers[4].user_id
+
+        let arrayOfTeacherIds = [firstTeacherId, secondTeacherId, thirdTeacherId, fourthTeacherId, fifthTeacherId]
+
+        let findTeachersEmailOfMaximumSchools = await School.findAll({
+            attributes: schoolAttributes,
+            where: {
+                id: { [Op.in]: arrayOfSchoolsIds }
+            },
+            include: [{
+                model: User,
+                as: "users",
+                attributes: userAttributes,
+                where: {
+                    id: { [Op.in]: arrayOfTeacherIds }
+                }
+            }],
+            subQuery: false
+        })
+
+
+        let response = {
+            // schoolsWithMaxLearners: schoolsWithMaxLearners,
+            // teachersFromSchoolWithMaximumLearners: findTeachersOfMaximumSchools
+            teachersEmailOfMaximumSchools: findTeachersEmailOfMaximumSchools
+        }
+
+
+        // if (!findSchoolsByLearner.length) return res.status(404).send({ status: "success", message: "No users found as per the filters applied" })
+
+        return res.status(200).send({ status: "success", message: "Schools:", data: response })
+
+
+    } catch (err) {
+        console.log(err.message)
+        return res.status(422).send({ status: "error", msg: "Something went wrong Please check back again" })
+    }
+};
+
 module.exports = {
     getAllSchools,
-    getAllSchoolsByUser
+    getAllSchoolsByUser,
+    getAllSchoolsByLearner
 };

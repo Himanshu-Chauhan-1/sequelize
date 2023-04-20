@@ -19,6 +19,12 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'user_id',
       })
 
+      //RELATION WITH `user school`
+      this.belongsTo(models.UserSchool, {
+        as: "learnerSchool",
+        foreignKey: "id"
+      })
+
     }
   }
   Role.init({

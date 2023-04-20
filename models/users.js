@@ -34,13 +34,26 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'school_id',
       })
 
-     // RELATION WITH `role`
-     this.belongsToMany(models.Role, {
-      as: 'roles',
-      through: models.UserRole,
-      foreignKey: 'user_id',
-      otherkey: 'role_id',
-    })
+      // RELATION WITH `role`
+      this.belongsToMany(models.Role, {
+        as: 'roles',
+        through: models.UserRole,
+        foreignKey: 'user_id',
+        otherkey: 'role_id',
+      })
+
+      // RELATION WITH `userschool`
+      this.hasMany(models.UserSchool, {
+        as: 'users',
+        foreignKey: 'user_id',
+      })
+
+      // RELATION WITH `userschool`
+      this.hasMany(models.UserRole, {
+        as: 'usersRole',
+        foreignKey: 'user_id',
+      })
+
     }
   }
   Users.init(

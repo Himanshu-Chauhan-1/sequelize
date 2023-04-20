@@ -19,6 +19,19 @@ module.exports = (sequelize, DataTypes) => {
         through: 'user_schools',
         foreignKey: 'school_id',
       })
+
+      //RELATION WITH `user role`
+      this.hasMany(models.UserSchool, {
+        as: "learners",
+        foreignKey: "school_id"
+      })
+
+      //RELATION WITH `user role`
+      this.hasMany(models.UserSchool, {
+        as: "teachers",
+        foreignKey: "school_id"
+      })
+
     }
   }
   School.init({
