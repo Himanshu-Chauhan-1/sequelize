@@ -141,41 +141,17 @@ const getFiveMaximumSchools = async function (req, res) {
         const schoolAttributes = ['id', 'name', 'quintile']
         const userSchoolAttributes = ['user_id']
 
-        //Number of registrants of five maximum schools
+        //Number of registrants(learners) of five maximum schools
         const schoolsWithMaxRegistrants = await UserSchool.findAll({
             attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'],
-            [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'learnerCount']],
+            [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'registrantsCount']],
             group: sequelize.col('UserSchool.school_id'),
             raw: true,
             include: {
                 model: UserRole, as: 'learner', attributes: [],
                 where: { role_id: learnerRoleId }
             },
-            subQuery: false, limit: 5, order: [['learnerCount', 'DESC']]
-        })
-
-        //Number of players(whose pre_survey is false) of five maximum schools
-        const schoolsWithMaxPlayers = await UserSchool.findAll({
-            attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'],
-            [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'learnerCount']],
-            group: sequelize.col('UserSchool.school_id'),
-            raw: true,
-            include: {
-                model: User, as: 'users', attributes: [], where: { pre_survey: false }
-            },
-            subQuery: false, limit: 5, order: [['learnerCount', 'DESC']]
-        })
-
-        //Number of players(whose pre_survey is false and post_survey is true) of five maximum schools
-        const schoolsWithMaxPlayersWithPostSurvey = await UserSchool.findAll({
-            attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'],
-            [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'learnerCount']],
-            group: sequelize.col('UserSchool.school_id'),
-            raw: true,
-            include: {
-                model: User, as: 'users', attributes: [], where: { pre_survey: false, post_survey: true }
-            },
-            subQuery: false, limit: 5, order: [['learnerCount', 'DESC']]
+            subQuery: false, limit: 5, order: [['registrantsCount', 'DESC']]
         })
 
         const firstMaximumschool = schoolsWithMaxRegistrants[0].school_id
@@ -186,8 +162,34 @@ const getFiveMaximumSchools = async function (req, res) {
 
         const arrayOfMaxSchoolsIds = [firstMaximumschool, secondMaximumSchool, thirdMaximumSchool, fourthMaximumSchool, fifthMaximumSchool]
 
+        //Number of players(whose pre_survey is false) from five maximum schools
+        const playersFromMaxSchoolsWithPreSurvey = await UserSchool.findAll({
+            where: { school_id: { [Op.in]: arrayOfMaxSchoolsIds } },
+            attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'],
+            [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'playersCount']],
+            group: sequelize.col('UserSchool.school_id'),
+            raw: true,
+            include: {
+                model: User, as: 'users', attributes: [], where: { pre_survey: false }
+            },
+            subQuery: false, limit: 5, order: [['playersCount', 'DESC']]
+        })
+
+        //Number of players(whose pre_survey is false and post_survey is true) from five maximum schools
+        const playersFromMaxSchoolsWithPostSurvey = await UserSchool.findAll({
+            where: { school_id: { [Op.in]: arrayOfMaxSchoolsIds } },
+            attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'],
+            [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'playersCount']],
+            group: sequelize.col('UserSchool.school_id'),
+            raw: true,
+            include: {
+                model: User, as: 'users', attributes: [], where: { pre_survey: false, post_survey: true }
+            },
+            subQuery: false, limit: 5, order: [['playersCount', 'DESC']]
+        })
+
         //four teachers from each five maximum schools including email address
-        const teachersOfMaxSchoolsWithEmail = await School.findAll({
+        const teachersFromMaxSchoolsWithEmail = await School.findAll({
             attributes: schoolAttributes,
             where: { id: { [Op.in]: arrayOfMaxSchoolsIds } },
             include: {
@@ -204,12 +206,12 @@ const getFiveMaximumSchools = async function (req, res) {
 
         const requiredResponse = {
             schoolsWithMaxRegistrants: schoolsWithMaxRegistrants,
-            schoolsWithMaxPlayers: schoolsWithMaxPlayers,
-            schoolsWithMaxPlayersWithPostSurvey: schoolsWithMaxPlayersWithPostSurvey,
-            teachersOfMaxSchoolsWithEmail: teachersOfMaxSchoolsWithEmail
+            playersFromMaxSchoolsWithPreSurvey: playersFromMaxSchoolsWithPreSurvey,
+            playersFromMaxSchoolsWithPostSurvey: playersFromMaxSchoolsWithPostSurvey,
+            teachersFromMaxSchoolsWithEmail: teachersFromMaxSchoolsWithEmail
         }
 
-        if ((schoolsWithMaxRegistrants.length === 0) || (schoolsWithMaxPlayers.length === 0) || (schoolsWithMaxPlayersWithPostSurvey.length === 0) || (teachersOfMaxSchoolsWithEmail.length === 0)) {
+        if ((schoolsWithMaxRegistrants.length === 0) || (playersFromMaxSchoolsWithPreSurvey.length === 0) || (playersFromMaxSchoolsWithPostSurvey.length === 0) || (teachersFromMaxSchoolsWithEmail.length === 0)) {
             return res.status(404).send({ status: "success", message: "No data found....." })
         }
 
