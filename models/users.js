@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+
       // RELATION WITH `school`
       this.belongsToMany(models.School, {
         as: 'schools',
@@ -42,13 +43,13 @@ module.exports = (sequelize, DataTypes) => {
         otherkey: 'role_id',
       })
 
-      // RELATION WITH `userschool`
+      // RELATION WITH `user school`
       this.hasMany(models.UserSchool, {
         as: 'users',
         foreignKey: 'user_id',
       })
 
-      // RELATION WITH `userschool`
+      // RELATION WITH `user role`
       this.hasMany(models.UserRole, {
         as: 'usersRole',
         foreignKey: 'user_id',

@@ -8,7 +8,7 @@ const UserSchool = db.UserSchool
 const { Op } = require("sequelize");
 const sequelize = require("sequelize");
 
-//========================================GET/GET-ALL-SCHOOLS===============================================================//
+//=========================================GET/GET-ALL-SCHOOLS=====================================================//
 
 const getAllSchools = async function (req, res) {
     try {
@@ -59,7 +59,7 @@ const getAllSchools = async function (req, res) {
     }
 };
 
-//===========================================GET/GET-ALL-SCHOOLS-FOR-USER=====================================================//
+//==========================================GET/GET-ALL-SCHOOLS-FOR-USER===========================================//
 
 const getAllSchoolsByUser = async function (req, res) {
     try {
@@ -126,103 +126,94 @@ const getAllSchoolsByUser = async function (req, res) {
     }
 };
 
-//===========================================GET/GET-ALL-SCHOOLS-FOR-LEARNER=====================================================//
+//==========================================GET/GET-FIVE-MAXIMUM-SCHOOLS==========================================//
 
-const getAllSchoolsByLearner = async function (req, res) {
+const getFiveMaximumSchools = async function (req, res) {
     try {
 
-        let findLearnerRoleId = await Role.findOne({ where: { name: "Learner" } })
-        let learnerRoleId = findLearnerRoleId.id
+        const findLearnerRoleId = await Role.findOne({ where: { name: "Learner" } })
+        const learnerRoleId = findLearnerRoleId.id
 
-        let findTeacherRoleId = await Role.findOne({ where: { name: "Learner" } })
-        let teacherRoleId = findTeacherRoleId.id
+        const findTeacherRoleId = await Role.findOne({ where: { name: "Learner" } })
+        const teacherRoleId = findTeacherRoleId.id
 
-        let userAttributes = ['id', 'display_name', 'email']
+        const userAttributes = ['id', 'display_name', 'email']
+        const schoolAttributes = ['id', 'name', 'quintile']
+        const userSchoolAttributes = ['user_id']
 
-        let schoolAttributes = ['id', 'name', 'quintile']
-
-        const schoolsWithMaxLearners = await UserSchool.findAll({
-            attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'], [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'learnerCount']],
+        //Number of registrants of five maximum schools
+        const schoolsWithMaxRegistrants = await UserSchool.findAll({
+            attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'],
+            [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'learnerCount']],
             group: sequelize.col('UserSchool.school_id'),
             raw: true,
-            include: [{
-                model: UserRole,
-                as: 'learner',
-                attributes: [],
-                where: {
-                    role_id: learnerRoleId
-                }
-            }],
-            subQuery: false,
-            limit: 5,
-            order: [['learnerCount', 'DESC']],
+            include: {
+                model: UserRole, as: 'learner', attributes: [],
+                where: { role_id: learnerRoleId }
+            },
+            subQuery: false, limit: 5, order: [['learnerCount', 'DESC']]
         })
 
-        let firstMaximumschool = schoolsWithMaxLearners[0].school_id
-        let secondMaximumSchool = schoolsWithMaxLearners[1].school_id
-        let thirdMaximumSchool = schoolsWithMaxLearners[2].school_id
-        let fourthMaximumSchool = schoolsWithMaxLearners[3].school_id
-        let fifthMaximumSchool = schoolsWithMaxLearners[4].school_id
-
-        let arrayOfSchoolsIds = [firstMaximumschool, secondMaximumSchool, thirdMaximumSchool, fourthMaximumSchool, fifthMaximumSchool]
-
-        let findTeachersOfMaximumSchools = await School.findAll({
-            attributes: schoolAttributes,
-            where: {
-                id: { [Op.in]: arrayOfSchoolsIds }
+        //Number of players(whose pre_survey is false) of five maximum schools
+        const schoolsWithMaxPlayers = await UserSchool.findAll({
+            attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'],
+            [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'learnerCount']],
+            group: sequelize.col('UserSchool.school_id'),
+            raw: true,
+            include: {
+                model: User, as: 'users', attributes: [], where: { pre_survey: false }
             },
-            include: [{
-                model: UserSchool,
-                as: "teachers",
-                attributes: ['user_id', 'school_id'],
+            subQuery: false, limit: 5, order: [['learnerCount', 'DESC']]
+        })
+
+        //Number of players(whose pre_survey is false and post_survey is true) of five maximum schools
+        const schoolsWithMaxPlayersWithPostSurvey = await UserSchool.findAll({
+            attributes: [[sequelize.col('UserSchool.school_id'), 'school_id'],
+            [sequelize.fn('COUNT', sequelize.col('UserSchool.school_id')), 'learnerCount']],
+            group: sequelize.col('UserSchool.school_id'),
+            raw: true,
+            include: {
+                model: User, as: 'users', attributes: [], where: { pre_survey: false, post_survey: true }
+            },
+            subQuery: false, limit: 5, order: [['learnerCount', 'DESC']]
+        })
+
+        const firstMaximumschool = schoolsWithMaxRegistrants[0].school_id
+        const secondMaximumSchool = schoolsWithMaxRegistrants[1].school_id
+        const thirdMaximumSchool = schoolsWithMaxRegistrants[2].school_id
+        const fourthMaximumSchool = schoolsWithMaxRegistrants[3].school_id
+        const fifthMaximumSchool = schoolsWithMaxRegistrants[4].school_id
+
+        const arrayOfMaxSchoolsIds = [firstMaximumschool, secondMaximumSchool, thirdMaximumSchool, fourthMaximumSchool, fifthMaximumSchool]
+
+        //four teachers from each five maximum schools including email address
+        const teachersOfMaxSchoolsWithEmail = await School.findAll({
+            attributes: schoolAttributes,
+            where: { id: { [Op.in]: arrayOfMaxSchoolsIds } },
+            include: {
+                model: UserSchool, as: "teachers", attributes: userSchoolAttributes,
                 include: {
-                    model: UserRole,
-                    as: "teacher",
-                    attributes: [],
-                    where: {
-                        role_id: teacherRoleId
-                    },
-                }
-            }],
-            subQuery: false
-        })
-
-        let firstTeacherId = findTeachersOfMaximumSchools[0].teachers[0].user_id
-        let secondTeacherId = findTeachersOfMaximumSchools[1].teachers[1].user_id
-        let thirdTeacherId = findTeachersOfMaximumSchools[2].teachers[2].user_id
-        let fourthTeacherId = findTeachersOfMaximumSchools[3].teachers[3].user_id
-        let fifthTeacherId = findTeachersOfMaximumSchools[4].teachers[4].user_id
-
-        let arrayOfTeacherIds = [firstTeacherId, secondTeacherId, thirdTeacherId, fourthTeacherId, fifthTeacherId]
-
-        let findTeachersEmailOfMaximumSchools = await School.findAll({
-            attributes: schoolAttributes,
-            where: {
-                id: { [Op.in]: arrayOfSchoolsIds }
+                    model: UserRole, as: "teacher", attributes: [],
+                    where: { role_id: teacherRoleId }
+                },
+                limit: 4, order: [['user_id', 'DESC']],
+                include: { model: User, as: "users", attributes: userAttributes }
             },
-            include: [{
-                model: User,
-                as: "users",
-                attributes: userAttributes,
-                where: {
-                    id: { [Op.in]: arrayOfTeacherIds }
-                }
-            }],
             subQuery: false
         })
 
-
-        let response = {
-            // schoolsWithMaxLearners: schoolsWithMaxLearners,
-            // teachersFromSchoolWithMaximumLearners: findTeachersOfMaximumSchools
-            teachersEmailOfMaximumSchools: findTeachersEmailOfMaximumSchools
+        const requiredResponse = {
+            schoolsWithMaxRegistrants: schoolsWithMaxRegistrants,
+            schoolsWithMaxPlayers: schoolsWithMaxPlayers,
+            schoolsWithMaxPlayersWithPostSurvey: schoolsWithMaxPlayersWithPostSurvey,
+            teachersOfMaxSchoolsWithEmail: teachersOfMaxSchoolsWithEmail
         }
 
+        if ((schoolsWithMaxRegistrants.length === 0) || (schoolsWithMaxPlayers.length === 0) || (schoolsWithMaxPlayersWithPostSurvey.length === 0) || (teachersOfMaxSchoolsWithEmail.length === 0)) {
+            return res.status(404).send({ status: "success", message: "No data found....." })
+        }
 
-        // if (!findSchoolsByLearner.length) return res.status(404).send({ status: "success", message: "No users found as per the filters applied" })
-
-        return res.status(200).send({ status: "success", message: "Schools:", data: response })
-
+        return res.status(200).send({ status: "success", message: "The 5 Maximum Schools are:", data: requiredResponse })
 
     } catch (err) {
         console.log(err.message)
@@ -233,5 +224,5 @@ const getAllSchoolsByLearner = async function (req, res) {
 module.exports = {
     getAllSchools,
     getAllSchoolsByUser,
-    getAllSchoolsByLearner
+    getFiveMaximumSchools
 };
