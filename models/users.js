@@ -42,19 +42,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'user_id',
         otherkey: 'role_id',
       })
-
-      // RELATION WITH `user school`
-      this.hasMany(models.UserSchool, {
-        as: 'users',
-        foreignKey: 'user_id',
-      })
-
-      // RELATION WITH `user role`
-      this.hasMany(models.UserRole, {
-        as: 'usersRole',
-        foreignKey: 'user_id',
-      })
-
     }
   }
   Users.init(
