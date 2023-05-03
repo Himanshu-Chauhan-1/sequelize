@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const routesFolder = require(path.resolve('./modules'));
+const routesFolder = path.resolve('modules');
 
 /**
  * Function to get all route path.
