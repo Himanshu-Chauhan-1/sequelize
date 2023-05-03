@@ -29,6 +29,12 @@ module.exports = (sequelize, DataTypes) => {
 
       //RELATION WITH `user school`
       this.hasMany(models.UserSchool, {
+        as: "learners1",
+        foreignKey: "school_id"
+      })
+
+      //RELATION WITH `user school`
+      this.hasMany(models.UserSchool, {
         as: "teachers",
         foreignKey: "school_id"
       })

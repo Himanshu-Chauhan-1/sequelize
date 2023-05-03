@@ -13,7 +13,13 @@ module.exports = (sequelize, DataTypes) => {
 
       // RELATION WITH `users`
       this.belongsTo(models.User, {
-        as: 'users',
+        as: 'useTeacher',
+        foreignKey: 'user_id',
+      })
+
+      // RELATION WITH `users`
+      this.belongsTo(models.User, {
+        as: 'useLearner',
         foreignKey: 'user_id',
       })
 
@@ -21,12 +27,6 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(models.UserRole, {
         as: "learner",
         foreignKey: "user_id"
-      })
-
-      //RELATION WITH `role`
-      this.hasMany(models.Role, {
-        as: "learnerRole",
-        foreignKey: "id"
       })
 
       //RELATION WITH `user role`
