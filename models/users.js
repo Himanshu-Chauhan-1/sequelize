@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+
       // RELATION WITH `school`
       this.belongsToMany(models.School, {
         as: 'schools',
@@ -40,12 +41,6 @@ module.exports = (sequelize, DataTypes) => {
         through: models.UserRole,
         foreignKey: 'user_id',
         otherkey: 'role_id',
-      })
-
-      // RELATION WITH `blogs`
-      this.hasMany(models.Blog, {
-        as: 'blogs',
-        foreignKey: 'user_id',
       })
     }
   }
