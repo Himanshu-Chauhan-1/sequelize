@@ -2,6 +2,7 @@ const path = require('path');
 const db = require(path.resolve('./models/index'));
 const Blog = db.Blog
 const { Op } = require("sequelize");
+const sequelize = require("sequelize")
 
 //========================================GET/GET-ALL-BLOGS===============================================================//
 
@@ -50,5 +51,51 @@ const getAllBlogs = async function (req, res) {
     }
 };
 
+//==========================================GET/GET-BLOGS-BY-USER-WITH-REACTIONS===========================================//
 
-module.exports = { getAllBlogs }
+const getBlogsByUser = async function (req, res) {
+    try {
+
+        let page = Number(req.query.page) || 1;
+        let limit = Number(req.query.limit) ? Number(req.query.limit) : 10;
+        let offset = (page - 1) * limit
+
+        const blogQuery = `select distinct array_agg(users.id)
+        from
+        "users"
+               left join "blogs" on "blogs"."user_id" = "users"."id"  
+        where  
+               "blogs"."id"  in (
+                select
+               "blog_id"
+                from
+               "blogs_reactions"
+               inner join "blogs" on "blogs"."id" = "blogs_reactions"."blog_id"
+                                )      
+        and "display_name" != 'Removed User'`
+
+        const result = await Blog.findAll({
+            // where: { id: "21e44b66-a20c-4c07-998b-64f9638e1f46" },
+            attributes: {
+                exclude: ['posted_by', 'space_id', 'user_id', 'header_image_id', 'audience_type', 'content_type', 'created_at', 'updated_at', 'deleted_at'],
+                include: [
+                    [sequelize.literal(`(${blogQuery})`), `blog_reactions`]
+                ]
+            },
+            order: [['id', 'ASC']],
+            // offset: offset, limit: limit
+        })
+
+        return res.status(200).send({ status: "success", message: 'All Schools details:', data_count: result.length, data: result })
+
+    } catch (err) {
+        console.log(err.message)
+        return res.status(422).send({ status: "error", msg: "Something went wrong Please check back again" })
+    }
+};
+
+
+module.exports = {
+    getAllBlogs,
+    getBlogsByUser
+}
