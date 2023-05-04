@@ -60,26 +60,42 @@ const getBlogsByUser = async function (req, res) {
         let limit = Number(req.query.limit) ? Number(req.query.limit) : 10;
         let offset = (page - 1) * limit
 
-        const blogQuery = `select distinct array_agg(users.id)
+        const blogReactionQuery = `select distinct array_agg(users.id)
         from
         "users"
                left join "blogs" on "blogs"."user_id" = "users"."id"  
         where  
-               "blogs"."id"  in (
+               "users"."id"  in (
                 select
-               "blog_id"
+               "user_id"
                 from
                "blogs_reactions"
                inner join "blogs" on "blogs"."id" = "blogs_reactions"."blog_id"
-                                )      
+                                )   
+        and "blogs"."id"="Blog"."id"   
         and "display_name" != 'Removed User'`
+
+        const blogCommentQuery = `select distinct array_agg(blog_comments.id)
+        from
+        "blog_comments"
+               left join "blogs" on "blogs"."id" = "blog_comments"."blog_id"  
+          where  
+                                "blogs"."id"  in (
+                                    select
+                                        "blog_id"
+                                    from
+                                        "blog_comments"
+                                        inner join "blogs" on "blog_comments"."blog_id" = "blogs"."id"
+                                )      
+                                and "blogs"."id"="Blog"."id"`
 
         const result = await Blog.findAll({
             // where: { id: "21e44b66-a20c-4c07-998b-64f9638e1f46" },
             attributes: {
-                exclude: ['posted_by', 'space_id', 'user_id', 'header_image_id', 'audience_type', 'content_type', 'created_at', 'updated_at', 'deleted_at'],
+                exclude: ['description', 'posted_by', 'space_id', 'header_image_id', 'audience_type', 'content_type', 'created_at', 'updated_at', 'deleted_at', 'is_draft'],
                 include: [
-                    [sequelize.literal(`(${blogQuery})`), `blog_reactions`]
+                    [sequelize.literal(`(${blogReactionQuery})`), `blog_reactions`],
+                    [sequelize.literal(`(${blogCommentQuery})`), `blog_comments`]
                 ]
             },
             order: [['id', 'ASC']],
